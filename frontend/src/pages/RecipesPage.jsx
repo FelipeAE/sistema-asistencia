@@ -20,7 +20,8 @@ const ALERGENOS_COMUNES = [
   'huevo',
   'pescado',
   'mariscos',
-  'frutos secos',
+  'palta',
+  'queso',
   'soya'
 ]
 

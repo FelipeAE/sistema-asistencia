@@ -119,7 +119,7 @@ async def export_employee_monthly_report(
         )
     else:
         output = ReportService.export_to_excel({
-            f"Empleados {month}/{year}": df
+            f"Resumen {month_name} {year}": df
         })
 
         return StreamingResponse(

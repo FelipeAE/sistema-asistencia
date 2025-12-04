@@ -12,7 +12,7 @@ const CATEGORIAS = [
 ]
 
 const ALERGENOS = [
-  'gluten', 'lacteos', 'huevo', 'pescado', 'mariscos', 'frutos_secos', 'soya', 'mani'
+  'gluten', 'lacteos', 'huevo', 'pescado', 'mariscos', 'palta', 'queso', 'soya', 'mani'
 ]
 
 function AdminRecipesPage() {
