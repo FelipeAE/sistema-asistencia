@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads and data
+backend/data/uploads/*
+backend/data/photos/*
+backend/data/exports/*
+backend/data/backups/*
+!backend/data/uploads/.gitkeep
+!backend/data/photos/.gitkeep
+!backend/data/exports/.gitkeep
+!backend/data/backups/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/build/
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temp/artifacts
+nul
+test_report.csv
+*.md.bak
