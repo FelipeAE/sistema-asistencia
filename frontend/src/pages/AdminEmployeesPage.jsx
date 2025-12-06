@@ -23,6 +23,7 @@ function AdminEmployeesPage() {
     telefono: '',
     restricciones_alimentarias: '',
     foto_url: '',
+    pin: '',
     activo: true
   })
   const navigate = useNavigate()
@@ -63,6 +64,7 @@ function AdminEmployeesPage() {
       telefono: '',
       restricciones_alimentarias: '',
       foto_url: '',
+      pin: '',
       activo: true
     })
     setPhotoFile(null)
@@ -81,6 +83,7 @@ function AdminEmployeesPage() {
       telefono: employee.telefono || '',
       restricciones_alimentarias: employee.restricciones_alimentarias || '',
       foto_url: employee.foto_url || '',
+      pin: '', // No cargamos el PIN existente por seguridad
       activo: employee.activo !== undefined ? employee.activo : true
     })
     setPhotoFile(null)
@@ -144,10 +147,16 @@ function AdminEmployeesPage() {
     try {
       let savedEmployee
 
+      // Preparar datos para enviar (excluir PIN vacío en edición para no borrarlo)
+      const dataToSend = { ...formData }
+      if (editingEmployee && !formData.pin) {
+        delete dataToSend.pin // No enviar PIN vacío al editar
+      }
+
       if (editingEmployee) {
-        savedEmployee = await employeesAPI.update(editingEmployee.id, formData)
+        savedEmployee = await employeesAPI.update(editingEmployee.id, dataToSend)
       } else {
-        savedEmployee = await employeesAPI.create(formData)
+        savedEmployee = await employeesAPI.create(dataToSend)
       }
 
       // Si hay una foto nueva, subirla
@@ -547,6 +556,35 @@ function AdminEmployeesPage() {
                       className="input-field"
                       placeholder="+56912345678"
                     />
+                  </div>
+                </div>
+
+                {/* PIN de Seguridad */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🔒</span>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-amber-900 mb-1">
+                        PIN de Seguridad (4 dígitos)
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.pin}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                          setFormData({...formData, pin: value})
+                        }}
+                        className="input-field w-32 text-center tracking-widest font-mono text-lg"
+                        placeholder="****"
+                        maxLength="4"
+                        inputMode="numeric"
+                      />
+                      <p className="text-xs text-amber-700 mt-2">
+                        {editingEmployee
+                          ? 'Deja vacío para mantener el PIN actual. Ingresa un nuevo PIN para cambiarlo.'
+                          : 'Opcional. Si no asignas PIN, el empleado podrá registrar asistencia solo con su RUT.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

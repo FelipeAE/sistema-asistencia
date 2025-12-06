@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\fiae\\sistema-asistencia\\crear_shortcut.ps1\")",
+      "Bash(venvScriptsactivate.bat)",
+      "Bash(pip install:*)",
+      "Bash(cmd /c \"cd /d C:\\Users\\fiae\\sistema-asistencia\\backend && call venv\\Scripts\\activate.bat && pip install rut-chile\")",
+      "Bash(cmd /c \"cd /d C:\\Users\\fiae\\sistema-asistencia\\backend && venv\\Scripts\\python.exe -c \"\"import rut_chile; print(''OK - rut_chile instalado'')\"\"\")",
+      "Bash(cmd /c \"C:\\Users\\fiae\\sistema-asistencia\\backend\\venv\\Scripts\\pip.exe install rut-chile\")",
+      "Bash(venvScriptspython.exe add_pin_column.py)",
+      "Bash(cmd /c \"cd /d C:\\Users\\fiae\\sistema-asistencia\\backend && venv\\Scripts\\python.exe add_pin_column.py\")",
+      "Bash(cmd /c \"cd /d C:\\Users\\fiae\\sistema-asistencia && git status\")",
+      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" status)",
+      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" add -A)"
     ],
     "deny": [],
     "ask": []

@@ -11,7 +11,8 @@ from ..schemas.employee import (
     EmployeeCreate,
     EmployeeUpdate,
     EmployeeResponse,
-    EmployeeSearchResponse
+    EmployeeSearchResponse,
+    EmployeeValidatePIN
 )
 from ..services.rut_validator import validate_rut, clean_rut, format_rut
 
@@ -19,9 +20,9 @@ router = APIRouter()
 
 
 @router.get("/{rut}", response_model=EmployeeSearchResponse)
-def get_employee_by_rut(rut: str, db: Session = Depends(get_db)):
+def get_employee_by_rut(rut: str, pin: str = None, db: Session = Depends(get_db)):
     """
-    Buscar empleado por RUT
+    Buscar empleado por RUT. Si el empleado tiene PIN, debe proporcionarse.
     """
     # Validar formato RUT
     if not validate_rut(rut):
@@ -29,11 +30,11 @@ def get_employee_by_rut(rut: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="RUT inválido"
         )
-    
+
     # Limpiar RUT para búsqueda
     clean_rut_value = clean_rut(rut)
     format_rut_value = format_rut(rut)
-    
+
     # Buscar empleado (probando múltiples formatos)
     employee = db.query(Employee).filter(
         Employee.activo == True
@@ -42,14 +43,40 @@ def get_employee_by_rut(rut: str, db: Session = Depends(get_db)):
         (Employee.rut == clean_rut_value) |  # Sin formato
         (Employee.rut == format_rut_value)  # Con puntos
     ).first()
-    
+
     if not employee:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Empleado no encontrado"
         )
-    
-    return employee
+
+    # Validar PIN si el empleado tiene uno configurado
+    if employee.pin:
+        if not pin:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="PIN requerido"
+            )
+        if employee.pin != pin:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="PIN incorrecto"
+            )
+
+    # Agregar campo tiene_pin a la respuesta
+    response = EmployeeSearchResponse(
+        id=employee.id,
+        rut=employee.rut,
+        nombre=employee.nombre,
+        departamento=employee.departamento,
+        cargo=employee.cargo,
+        restricciones_alimentarias=employee.restricciones_alimentarias,
+        foto_url=employee.foto_url,
+        activo=employee.activo,
+        tiene_pin=bool(employee.pin)
+    )
+
+    return response
 
 
 @router.get("/", response_model=List[EmployeeResponse])
@@ -111,6 +138,7 @@ def create_employee(employee: EmployeeCreate, db: Session = Depends(get_db)):
         cargo=employee.cargo,
         restricciones_alimentarias=employee.restricciones_alimentarias,
         foto_url=employee.foto_url,
+        pin=employee.pin,  # PIN de seguridad
         activo=employee.activo
     )
     

@@ -44,8 +44,12 @@ async function handleResponse(response) {
 
 // Employees
 export const employeesAPI = {
-  async getByRut(rut) {
-    const response = await fetch(`${API_BASE_URL}/employees/${rut}`)
+  async getByRut(rut, pin = null) {
+    let url = `${API_BASE_URL}/employees/${rut}`
+    if (pin) {
+      url += `?pin=${encodeURIComponent(pin)}`
+    }
+    const response = await fetch(url)
     return handleResponse(response)
   },
   

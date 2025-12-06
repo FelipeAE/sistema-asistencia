@@ -20,7 +20,7 @@ class EmployeeBase(BaseModel):
 
 class EmployeeCreate(EmployeeBase):
     """Schema para crear empleado"""
-    pass
+    pin: Optional[str] = Field(None, min_length=4, max_length=4, description="PIN de 4 dígitos")
 
 
 class EmployeeUpdate(BaseModel):
@@ -33,6 +33,7 @@ class EmployeeUpdate(BaseModel):
     restricciones_alimentarias: Optional[str] = None
     foto_url: Optional[str] = Field(None, max_length=255)
     activo: Optional[bool] = None
+    pin: Optional[str] = Field(None, min_length=4, max_length=4, description="PIN de 4 dígitos")
 
 
 class EmployeeResponse(EmployeeBase):
@@ -55,6 +56,13 @@ class EmployeeSearchResponse(BaseModel):
     restricciones_alimentarias: Optional[str]
     foto_url: Optional[str]
     activo: bool
+    tiene_pin: bool = False  # Indica si el empleado tiene PIN configurado
 
     class Config:
         from_attributes = True
+
+
+class EmployeeValidatePIN(BaseModel):
+    """Schema para validar PIN de empleado"""
+    rut: str = Field(..., description="RUT del empleado")
+    pin: str = Field(..., min_length=4, max_length=4, description="PIN de 4 dígitos")

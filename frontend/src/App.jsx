@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import AttendancePage from './pages/AttendancePage'
 import RecipesPage from './pages/RecipesPage'
@@ -10,9 +11,12 @@ import AdminStatsPage from './pages/AdminStatsPage'
 import AdminMenusPage from './pages/AdminMenusPage'
 import AdminRecipesPage from './pages/AdminRecipesPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import HelpModal from './components/HelpModal'
 import './App.css'
 
 function App() {
+  const [showHelp, setShowHelp] = useState(false)
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">
@@ -27,7 +31,7 @@ function App() {
                 </span>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Link
                   to="/"
                   className="px-4 py-2 text-gray-200 hover:text-white hover:bg-slate-700 rounded-lg transition-colors font-medium"
@@ -46,6 +50,13 @@ function App() {
                 >
                   🔐 Admin
                 </Link>
+                <button
+                  onClick={() => setShowHelp(true)}
+                  className="ml-2 w-10 h-10 flex items-center justify-center text-gray-200 hover:text-white hover:bg-slate-700 rounded-full transition-colors font-bold text-lg"
+                  title="Ayuda"
+                >
+                  ?
+                </button>
               </div>
             </div>
           </div>
@@ -64,6 +75,9 @@ function App() {
           <Route path="/admin/menus" element={<ProtectedRoute><AdminMenusPage /></ProtectedRoute>} />
           <Route path="/admin/recipes" element={<ProtectedRoute><AdminRecipesPage /></ProtectedRoute>} />
         </Routes>
+
+        {/* Modal de Ayuda */}
+        {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       </div>
     </Router>
   )

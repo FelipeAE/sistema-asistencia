@@ -8,6 +8,7 @@ import MenuDisplay from '../components/MenuDisplay'
 
 function AttendancePage() {
   const [rut, setRut] = useState('')
+  const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
@@ -52,6 +53,12 @@ function AttendancePage() {
     setEmployee(null)
   }
 
+  const handlePinChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+    setPin(value)
+    setError('')
+  }
+
   const handleRutSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -69,12 +76,19 @@ function AttendancePage() {
         throw new Error('Fuera de horario. No hay comida disponible en este momento.')
       }
 
-      // Buscar empleado (enviar con guión)
-      const employeeData = await employeesAPI.getByRut(rut)
-      
+      // Buscar empleado (enviar con guión y PIN si existe)
+      const employeeData = await employeesAPI.getByRut(rut, pin || null)
+
       setEmployee(employeeData)
     } catch (err) {
-      setError(err.message || 'Error al buscar empleado')
+      // Mensajes de error más amigables
+      if (err.message === 'PIN requerido') {
+        setError('Este empleado requiere PIN. Por favor ingresa tu PIN de 4 dígitos.')
+      } else if (err.message === 'PIN incorrecto') {
+        setError('PIN incorrecto. Verifica e intenta nuevamente.')
+      } else {
+        setError(err.message || 'Error al buscar empleado')
+      }
       setEmployee(null)
     } finally {
       setLoading(false)
@@ -94,7 +108,8 @@ function AttendancePage() {
       setSuccess(`¡Asistencia registrada! Bienvenido/a ${employee.nombre}`)
       setEmployee(null)
       setRut('')
-      
+      setPin('')
+
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
@@ -108,6 +123,7 @@ function AttendancePage() {
   const handleCancelEmployee = () => {
     setEmployee(null)
     setRut('')
+    setPin('')
   }
 
   const handleGuestSuccess = (guest) => {
@@ -175,7 +191,7 @@ function AttendancePage() {
 
                 {/* Formulario RUT Mejorado */}
                 <form onSubmit={handleRutSubmit} className="mb-8">
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <label htmlFor="rut" className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
                       Ingresa tu RUT
                     </label>
@@ -197,8 +213,33 @@ function AttendancePage() {
                     </div>
                   </div>
 
-                  <button 
-                    type="submit" 
+                  <div className="mb-6">
+                    <label htmlFor="pin" className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                      PIN de Seguridad
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        id="pin"
+                        value={pin}
+                        onChange={handlePinChange}
+                        placeholder="****"
+                        className="w-full px-6 py-4 text-xl font-semibold border-2 border-gray-300 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 bg-gray-50 tracking-widest text-center"
+                        maxLength="4"
+                        inputMode="numeric"
+                        disabled={!currentMealType || loading}
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        🔒
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2 text-center">
+                      Ingresa tu PIN de 4 dígitos (si tienes uno asignado)
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-lg py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     disabled={!currentMealType || loading}
                   >

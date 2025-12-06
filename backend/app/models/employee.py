@@ -8,7 +8,7 @@ from ..database import Base
 
 class Employee(Base):
     __tablename__ = "employees"
-    
+
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     rut = Column(String(12), unique=True, nullable=False, index=True)
     nombre = Column(String(100), nullable=False)
@@ -18,6 +18,7 @@ class Employee(Base):
     cargo = Column(String(50))
     restricciones_alimentarias = Column(Text)
     foto_url = Column(String(255))
+    pin = Column(String(4), nullable=True)  # PIN de 4 dígitos para validación
     activo = Column(Boolean, default=True)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
     fecha_actualizacion = Column(DateTime(timezone=True), onupdate=func.now())
