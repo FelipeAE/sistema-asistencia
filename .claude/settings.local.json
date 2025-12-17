@@ -11,7 +11,21 @@
       "Bash(cmd /c \"cd /d C:\\Users\\fiae\\sistema-asistencia\\backend && venv\\Scripts\\python.exe add_pin_column.py\")",
       "Bash(cmd /c \"cd /d C:\\Users\\fiae\\sistema-asistencia && git status\")",
       "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" status)",
-      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" add -A)"
+      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" add -A)",
+      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" log -3 --oneline)",
+      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" commit -m \"$(cat <<''EOF''\nfeat: agregar PIN de seguridad y sistema de ayuda\n\n- Agregar campo PIN (4 dígitos) para validación de empleados\n- Implementar modal de ayuda con FAQ y guías de uso\n- Crear scripts de inicio/cierre del sistema (IniciarSistema.bat)\n- Agregar acceso directo para escritorio\n- Incluir gestión de PIN en panel de administración\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" push)",
+      "Bash(xargs:*)",
+      "Bash(copy \"C:\\Users\\fiae\\sistema-asistencia\\apple-touch-icon.png\" \"C:\\Users\\fiae\\sistema-asistencia\\frontend\\public\"\")",
+      "Bash(copy \"C:\\Users\\fiae\\sistema-asistencia\\favicon-96x96.png\" \"C:\\Users\\fiae\\sistema-asistencia\\frontend\\public\"\")",
+      "Bash(copy \"C:\\Users\\fiae\\sistema-asistencia\\favicon.ico\" \"C:\\Users\\fiae\\sistema-asistencia\\frontend\\public\"\")",
+      "Bash(copy:*)",
+      "Bash(ls:*)",
+      "Bash(venv/Scripts/python.exe:*)",
+      "Bash(npm run build:*)",
+      "Bash(cmd /c \"cd /d C:\\Users\\fiae\\sistema-asistencia\\frontend && npm run build\")",
+      "Bash(cmd /c \"C: && cd C:\\Users\\fiae\\sistema-asistencia\\frontend && npm run build\")",
+      "Bash(git -C \"C:/Users/fiae/sistema-asistencia\" diff --stat)"
     ],
     "deny": [],
     "ask": []

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { menusAPI } from '../services/api'
+import { menusAPI, importAPI } from '../services/api'
 
 const TIPOS_COMIDA = ['desayuno', 'almuerzo', 'cena']
 
@@ -28,6 +28,14 @@ function AdminMenusPage() {
     opciones_dieteticas: '',
     activo: true
   })
+
+  // Estados para importación
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState(null)
+  const [updateExisting, setUpdateExisting] = useState(true)
+  const fileInputRef = useRef(null)
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -126,6 +134,67 @@ function AdminMenusPage() {
     }
   }
 
+  // Funciones para importación
+  const handleImportClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    setImportResult(null)
+
+    try {
+      const result = await importAPI.importMenus(file, updateExisting)
+      setImportResult(result)
+      if (result.success) {
+        await loadMenus()
+      }
+    } catch (error) {
+      setImportResult({
+        success: false,
+        error: error.message || 'Error al importar archivo'
+      })
+    } finally {
+      setImporting(false)
+      // Limpiar el input para permitir seleccionar el mismo archivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleDownloadTemplate = () => {
+    const token = localStorage.getItem('access_token')
+    const url = importAPI.getMenusTemplateUrl()
+
+    // Crear un link temporal para descargar con autenticación
+    fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(response => response.blob())
+      .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = downloadUrl
+        a.download = 'plantilla_menus.xlsx'
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(downloadUrl)
+        document.body.removeChild(a)
+      })
+      .catch(error => {
+        alert('Error al descargar plantilla: ' + error.message)
+      })
+  }
+
+  const closeImportModal = () => {
+    setShowImportModal(false)
+    setImportResult(null)
+  }
+
   // Agrupar menús por fecha
   const menusByDate = menus.reduce((acc, menu) => {
     const fecha = menu.fecha
@@ -166,6 +235,13 @@ function AdminMenusPage() {
                 className="px-4 py-2 text-white hover:bg-yellow-500 rounded-lg transition-colors"
               >
                 ← Volver al Dashboard
+              </button>
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="px-4 py-2 bg-yellow-500 text-white hover:bg-yellow-400 rounded-lg font-medium flex items-center gap-2"
+              >
+                <span>📥</span>
+                Importar Excel
               </button>
               <button
                 onClick={handleCreate}
@@ -543,6 +619,130 @@ function AdminMenusPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Importación */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full">
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span>📥</span>
+                Importar Menús desde Excel
+              </h2>
+
+              {/* Input de archivo oculto */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+              />
+
+              {/* Instrucciones */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <h3 className="font-medium text-yellow-800 mb-2">Formato del archivo:</h3>
+                <ul className="text-sm text-yellow-700 space-y-1">
+                  <li>• <strong>Columnas requeridas:</strong> Fecha, Tipo Comida</li>
+                  <li>• <strong>Columnas opcionales:</strong> Entrada, Plato Principal, Postre, Ensalada, Bebida, Descripcion</li>
+                  <li>• <strong>Tipos de comida:</strong> desayuno, almuerzo, cena</li>
+                  <li>• <strong>Formato fecha:</strong> YYYY-MM-DD, DD-MM-YYYY o DD/MM/YYYY</li>
+                </ul>
+              </div>
+
+              {/* Opción de actualizar existentes */}
+              <div className="mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={updateExisting}
+                    onChange={(e) => setUpdateExisting(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Actualizar menús existentes (misma fecha y tipo de comida)
+                  </span>
+                </label>
+              </div>
+
+              {/* Resultado de importación */}
+              {importResult && (
+                <div className={`rounded-lg p-4 mb-4 ${
+                  importResult.success
+                    ? 'bg-green-50 border border-green-200'
+                    : 'bg-red-50 border border-red-200'
+                }`}>
+                  {importResult.success ? (
+                    <div>
+                      <p className="font-medium text-green-800 mb-2">Importación exitosa</p>
+                      <ul className="text-sm text-green-700 space-y-1">
+                        <li>Menús creados: {importResult.created || 0}</li>
+                        <li>Menús actualizados: {importResult.updated || 0}</li>
+                        <li>Filas omitidas: {importResult.skipped || 0}</li>
+                      </ul>
+                      {importResult.errors && importResult.errors.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-green-300">
+                          <p className="text-sm font-medium text-yellow-700">Advertencias:</p>
+                          <ul className="text-xs text-yellow-600 mt-1 max-h-24 overflow-y-auto">
+                            {importResult.errors.slice(0, 5).map((err, idx) => (
+                              <li key={idx}>• {err}</li>
+                            ))}
+                            {importResult.errors.length > 5 && (
+                              <li>... y {importResult.errors.length - 5} más</li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="font-medium text-red-800">Error en importación</p>
+                      <p className="text-sm text-red-700 mt-1">{importResult.error}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Botones */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleImportClick}
+                  disabled={importing}
+                  className="btn-primary flex-1 flex items-center justify-center gap-2"
+                >
+                  {importing ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      Importando...
+                    </>
+                  ) : (
+                    <>
+                      <span>📂</span>
+                      Seleccionar Archivo
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="btn-secondary flex items-center gap-2"
+                  title="Descargar plantilla Excel"
+                >
+                  <span>📄</span>
+                  Plantilla
+                </button>
+              </div>
+
+              {/* Botón cerrar */}
+              <button
+                onClick={closeImportModal}
+                className="w-full mt-3 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

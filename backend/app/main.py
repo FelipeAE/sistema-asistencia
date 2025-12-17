@@ -1,11 +1,15 @@
 """
 FastAPI Application - Sistema de Asistencia
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pathlib import Path
 from .config import settings
+
+# Directorio del frontend
+frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -16,28 +20,29 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configurar CORS (solo orígenes locales permitidos)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["Content-Disposition"],
-)
+# Configurar CORS
+# En desarrollo permite todos los orígenes para facilitar testing con tunnels
+if settings.CORS_ALLOW_ALL:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,  # No se puede usar credentials con "*"
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
+    )
 
 
 # Rutas de la API
-@app.get("/")
-async def root():
-    """Ruta raíz"""
-    return {
-        "message": "Sistema de Asistencia - Casino",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
-
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
@@ -65,12 +70,34 @@ app.include_router(reports.router, prefix="/api/reports", tags=["Reportes"])
 # Servir fotos estáticas
 app.mount("/photos", StaticFiles(directory=str(settings.PHOTOS_DIR)), name="photos")
 
+# Servir archivos estáticos del frontend (assets)
+if frontend_dist.exists():
+    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
 
-# Servir archivos estáticos del frontend en producción
-if settings.ENVIRONMENT == "production":
-    frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+
+# Ruta raíz - sirve el index.html
+@app.get("/")
+async def serve_index():
+    """Sirve la página principal del frontend"""
     if frontend_dist.exists():
-        app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+        index_file = frontend_dist / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+    return {"message": "Frontend not built. Run 'npm run build' in frontend/"}
+
+
+# Rutas específicas del frontend SPA (no captura /api/)
+@app.get("/login")
+@app.get("/recipes")
+@app.get("/admin")
+@app.get("/admin/{rest:path}")
+async def serve_spa_routes(request: Request):
+    """Sirve index.html para rutas del SPA"""
+    if frontend_dist.exists():
+        index_file = frontend_dist / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+    return {"message": "Frontend not built. Run 'npm run build' in frontend/"}
 
 
 if __name__ == "__main__":

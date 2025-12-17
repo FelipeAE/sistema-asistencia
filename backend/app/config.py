@@ -35,8 +35,17 @@ class Settings(BaseSettings):
     EXPORTS_DIR: Path = BASE_DIR / "data" / "exports"
     BACKUPS_DIR: Path = BASE_DIR / "data" / "backups"
     
-    # CORS
-    CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
+    # CORS - Incluye localhost y VS Code Dev Tunnels
+    CORS_ORIGINS: list = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        # VS Code Dev Tunnels (permite cualquier subdominio)
+        "https://*.devtunnels.ms",
+    ]
+    # Para desarrollo: permitir todos los orígenes
+    CORS_ALLOW_ALL: bool = os.getenv("CORS_ALLOW_ALL", "true").lower() == "true"
     
     class Config:
         env_file = BASE_DIR / ".env"

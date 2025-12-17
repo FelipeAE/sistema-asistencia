@@ -2,7 +2,8 @@
  * Servicio de API para comunicación con backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+// Si hay variable de entorno, usarla. Si no, usar ruta relativa (mismo servidor)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 class ApiError extends Error {
   constructor(message, status, data) {
@@ -414,9 +415,9 @@ export const photosAPI = {
     if (filename.startsWith('/photos/')) {
       filename = filename.replace('/photos/', '')
     }
-    // Las fotos se sirven desde StaticFiles en /photos/, no desde /api/photos/
-    const baseUrl = API_BASE_URL.replace('/api', '')
-    return `${baseUrl}/photos/${filename}`
+    // Las fotos se sirven desde StaticFiles en /photos/
+    // Usar ruta relativa para que funcione en cualquier servidor
+    return `/photos/${filename}`
   }
 }
 
@@ -456,6 +457,43 @@ export const dashboardAPI = {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     return handleResponse(response)
+  }
+}
+
+// Import API
+export const importAPI = {
+  async importEmployees(file) {
+    const token = localStorage.getItem('access_token')
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/import/employees`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    })
+    return handleResponse(response)
+  },
+
+  async importMenus(file, updateExisting = true) {
+    const token = localStorage.getItem('access_token')
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/import/menus?update_existing=${updateExisting}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    })
+    return handleResponse(response)
+  },
+
+  getEmployeesTemplateUrl() {
+    return `${API_BASE_URL}/import/employees/template`
+  },
+
+  getMenusTemplateUrl() {
+    return `${API_BASE_URL}/import/menus/template`
   }
 }
 

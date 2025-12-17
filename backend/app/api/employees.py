@@ -19,6 +19,31 @@ from ..services.rut_validator import validate_rut, clean_rut, format_rut
 router = APIRouter()
 
 
+# IMPORTANTE: Las rutas más específicas deben ir ANTES de las rutas con parámetros dinámicos
+
+@router.get("/", response_model=List[EmployeeResponse])
+def list_employees(
+    skip: int = 0,
+    limit: int = 100,
+    activo: bool = None,
+    departamento: str = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Listar empleados con filtros opcionales
+    """
+    query = db.query(Employee)
+
+    if activo is not None:
+        query = query.filter(Employee.activo == activo)
+
+    if departamento:
+        query = query.filter(Employee.departamento == departamento)
+
+    employees = query.offset(skip).limit(limit).all()
+    return employees
+
+
 @router.get("/{rut}", response_model=EmployeeSearchResponse)
 def get_employee_by_rut(rut: str, pin: str = None, db: Session = Depends(get_db)):
     """
@@ -77,29 +102,6 @@ def get_employee_by_rut(rut: str, pin: str = None, db: Session = Depends(get_db)
     )
 
     return response
-
-
-@router.get("/", response_model=List[EmployeeResponse])
-def list_employees(
-    skip: int = 0,
-    limit: int = 100,
-    activo: bool = None,
-    departamento: str = None,
-    db: Session = Depends(get_db)
-):
-    """
-    Listar empleados con filtros opcionales
-    """
-    query = db.query(Employee)
-    
-    if activo is not None:
-        query = query.filter(Employee.activo == activo)
-    
-    if departamento:
-        query = query.filter(Employee.departamento == departamento)
-    
-    employees = query.offset(skip).limit(limit).all()
-    return employees
 
 
 @router.post("/", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
